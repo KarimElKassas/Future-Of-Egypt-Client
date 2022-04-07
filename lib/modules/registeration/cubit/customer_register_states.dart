@@ -38,6 +38,10 @@ class CustomerRegisterAddClassificationPersonIDSuccessState extends CustomerRegi
 
 class CustomerRegisterUserExistState extends CustomerRegisterStates{}
 
+class CustomerRegisterAddChatListSuccessState extends CustomerRegisterStates{}
+
+class CustomerRegisterCreateChatSuccessState extends CustomerRegisterStates{}
+
 class CustomerRegisterSuccessState extends CustomerRegisterStates{}
 
 class CustomerRegisterErrorState extends CustomerRegisterStates{
@@ -45,6 +49,13 @@ class CustomerRegisterErrorState extends CustomerRegisterStates{
   final String error;
 
   CustomerRegisterErrorState(this.error);
+
+}
+class CustomerRegisterAddChatListErrorState extends CustomerRegisterStates{
+
+  final String error;
+
+  CustomerRegisterAddChatListErrorState(this.error);
 
 }
 class CustomerRegisterAddNameErrorState extends CustomerRegisterStates{

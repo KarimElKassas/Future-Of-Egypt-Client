@@ -47,7 +47,7 @@ class GlobalDisplayPostsCubit extends Cubit<GlobalDisplayPostsStates> {
 
     FirebaseDatabase.instance
         .reference()
-        .child('modules.Posts')
+        .child('Posts')
         .orderByChild("PostDate")
         .once()
         .then((snapshot) async {

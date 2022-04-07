@@ -30,11 +30,12 @@ class _CustomerSettingsScreenState extends State<CustomerSettingsScreen> {
 
           return Scaffold(
             body: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(24.0),
               child: SafeArea(
-                child: Center(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
                   child: defaultButton(function: (){
-                    cubit.logOutUser();
+                    cubit.logOutUser(context);
                   }, text: "تسجيل الخروج",
                   background: Colors.teal[700]!,
                   ),

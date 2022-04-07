@@ -2,6 +2,8 @@ abstract class CustomerDisplayChatsStates{}
 
 class CustomerDisplayChatsInitialState extends CustomerDisplayChatsStates{}
 
+class CustomerDisplayChatsGetMyDataState extends CustomerDisplayChatsStates{}
+
 class CustomerDisplayChatsLoadingChatsState extends CustomerDisplayChatsStates{}
 
 class CustomerDisplayChatsGetUserTypeState extends CustomerDisplayChatsStates{}

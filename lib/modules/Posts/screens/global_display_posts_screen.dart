@@ -1,18 +1,17 @@
 import 'dart:ui' as ui;
+
+import 'package:better_player/better_player.dart';
 import 'package:buildcondition/buildcondition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../models/posts_model.dart';
 import '../../../shared/components.dart';
-import '../../../shared/cubit/app_cubit.dart';
 import '../cubit/global_display_posts_cubit.dart';
 import '../cubit/global_display_posts_states.dart';
 import 'global_post_details_screen.dart';
@@ -25,8 +24,24 @@ class GlobalDisplayPostsScreen extends StatefulWidget {
 
 class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
     with WidgetsBindingObserver {
-  VideoPlayerController? videoPlayerController;
+  //VideoPlayerController? videoPlayerController;
   bool videosInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance!.addObserver(this);
+    noInternet();
+
+    print("display screen initState\n");
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +81,10 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
               appBar: AppBar(
                 systemOverlayStyle: SystemUiOverlayStyle(
                   statusBarColor: Colors.teal[700],
-                  statusBarIconBrightness: Brightness.light, // For Android (dark icons)
+                  statusBarIconBrightness: Brightness.light,
+                  // For Android (dark icons)
                   statusBarBrightness: Brightness.dark, // For iOS (dark icons)
                 ),
-
                 backgroundColor: Colors.teal[700],
                 title: const Text("اخبار المشروع"),
                 actions: [
@@ -90,8 +105,8 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
                 condition: state is GlobalDisplayPostsLoadingState,
                 builder: (context) => Center(
                     child: CircularProgressIndicator(
-                      color: Colors.teal[700],
-                      strokeWidth: 0.8,
+                  color: Colors.teal[700],
+                  strokeWidth: 0.8,
                 )),
                 fallback: (context) => BuildCondition(
                   condition: cubit.postsListReversed.isEmpty,
@@ -100,8 +115,8 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
                     addAutomaticKeepAlives: true,
                     scrollDirection: Axis.vertical,
                     physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, index) => cardBuilder(
-                        context, cubit, state, cubit.postsListReversed[index], index),
+                    itemBuilder: (context, index) => cardBuilder(context, cubit,
+                        state, cubit.postsListReversed[index], index),
                     separatorBuilder: (context, index) =>
                         const SizedBox(width: 10.0),
                     itemCount: cubit.postsListReversed.length,
@@ -165,33 +180,36 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
       );
 
   Widget cardBuilder(BuildContext context, GlobalDisplayPostsCubit cubit,
-          GlobalDisplayPostsStates state, PostsModel postsModel, int index) =>
-      InkWell(
-        onTap: () {
-          cubit.goToDetails(
-              context,
-              GlobalPostDetailsScreen(
-                  postID: cubit.postsListReversed[index].PostID.toString(),
-                  postTitle: cubit.postsListReversed[index].PostTitle.toString(),
-                  postVideoID: cubit.postsListReversed[index].PostVideoID.toString(),
-                  hasImages: cubit.postsListReversed[index].hasImages.toString(),
-                  postImages: cubit.postsListReversed[index].PostImages));
-        },
-        child: Card(
-          margin: const EdgeInsets.all(16.0),
-          elevation: 15,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          shadowColor: Colors.black,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              headerRow(cubit, index),
-              postBody(context, cubit, state, cubit.postsModel!, index),
-            ],
-          ),
+      GlobalDisplayPostsStates state, PostsModel postsModel, int index) {
+
+    return InkWell(
+      onTap: () {
+        cubit.goToDetails(
+            context,
+            GlobalPostDetailsScreen(
+                postID: cubit.postsListReversed[index].PostID.toString(),
+                postTitle: cubit.postsListReversed[index].PostTitle.toString(),
+                postVideoID:
+                    cubit.postsListReversed[index].PostVideoID.toString(),
+                hasImages: cubit.postsListReversed[index].hasImages.toString(),
+                postImages: cubit.postsListReversed[index].PostImages));
+      },
+      child: Card(
+        margin: const EdgeInsets.all(16.0),
+        elevation: 15,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+        shadowColor: Colors.black,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            headerRow(cubit, index),
+            postBody(context, cubit, state, cubit.postsModel!, index),
+          ],
         ),
-      );
+      ),
+    );
+  }
 
   Widget headerRow(GlobalDisplayPostsCubit cubit, int index) => Padding(
         padding: const EdgeInsets.all(12.0),
@@ -221,8 +239,8 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
 
   Widget postBody(BuildContext context, GlobalDisplayPostsCubit cubit,
       GlobalDisplayPostsStates state, PostsModel postsModel, int index) {
-    cubit.initializeVideoWithoutPlay(
-        cubit.postsListReversed[index].PostVideoID.toString());
+    /*cubit.initializeVideoWithoutPlay(
+        cubit.postsListReversed[index].PostVideoID.toString());*/
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
@@ -253,7 +271,9 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
             height: 16.0,
           ),
           Visibility(
-            visible: cubit.postsListReversed[index].hasImages == "true" ? true : false,
+            visible: cubit.postsListReversed[index].hasImages == "true"
+                ? true
+                : false,
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(8.0),
@@ -264,7 +284,8 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
                 height: 250,
                 width: MediaQuery.of(context).size.width,
                 fit: BoxFit.fill,
-                image: NetworkImage(cubit.postsListReversed[index].PostImages![0]
+                image: NetworkImage(cubit
+                    .postsListReversed[index].PostImages![0]
                     .toString()
                     .replaceAll("[", "")
                     .replaceAll("]", "")),
@@ -284,9 +305,21 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
             height: 16.0,
           ),
           Visibility(
-            visible:
-                cubit.postsListReversed[index].PostVideoID == "Empty" ? false : true,
-            child: SizedBox(
+            visible: cubit.postsListReversed[index].PostVideoID == "Empty"
+                ? false
+                : true,
+            child:
+
+
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: BetterPlayerListVideoPlayer(
+                BetterPlayerDataSource(BetterPlayerDataSourceType.network,
+                    "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"),
+                key: Key(cubit.postsListReversed.hashCode.toString()),
+                playFraction: 0.8,
+              ),
+            /*SizedBox(
               child: YoutubePlayer(
                 bottomActions: [
                   CurrentPosition(),
@@ -301,7 +334,8 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
               ),
               width: MediaQuery.of(context).size.width,
               height: 200,
-            ),
+            ),*/
+          ),
           ),
           const SizedBox(
             height: 8.0,
@@ -309,17 +343,6 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
         ],
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance!.addObserver(this);
-
-    noInternet();
-
-    print("display screen initState\n");
   }
 
   @override
@@ -342,12 +365,5 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
         print("display screen detached\n");
         break;
     }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
-
-    super.dispose();
   }
 }

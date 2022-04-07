@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:future_of_egypt_client/modules/home/layout/customer_home_layout.dart';
 import 'package:future_of_egypt_client/modules/registeration/screens/customer_register_screen.dart';
 
 import '../../shared/components.dart';
@@ -22,7 +23,7 @@ class LoginScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => LoginCubit(),
       child: BlocConsumer<LoginCubit, LoginStates>(listener: (context, state) {
-        if (state is LoginErrorState) {
+        if (state is LoginGetClientDataErrorState) {
           showToast(
             message: state.error,
             length: Toast.LENGTH_LONG,
@@ -38,14 +39,14 @@ class LoginScreen extends StatelessWidget {
           );
         }
 
-        if (state is LoginSuccessState) {
+        if (state is LoginGetClientDataSuccessState) {
           showToast(
             message: 'تم تسجيل الدخول بنجاح',
             length: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             timeInSecForIosWeb: 3,
           );
-
+          navigateAndFinish(context, CustomerHomeLayout());
         }
       }, builder: (context, state) {
         var cubit = LoginCubit.get(context);

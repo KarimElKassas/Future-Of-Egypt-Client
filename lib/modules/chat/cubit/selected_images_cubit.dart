@@ -38,7 +38,7 @@ class CustomerSelectedImagesCubit extends Cubit<CustomerSelectedImagesStates>{
     userDocNumber = prefs.getString("CustomerDocNumber")!;
     userCity = prefs.getString("CustomerCity")!;
     userRegion = prefs.getString("CustomerRegion")!;
-    userImageUrl = prefs.getString("CustomerImage")!;
+    userImageUrl = prefs.getString("CustomerImageUrl")!;
     userToken = prefs.getString("CustomerToken")!;
   }
 
@@ -79,6 +79,7 @@ class CustomerSelectedImagesCubit extends Cubit<CustomerSelectedImagesStates>{
             urlsList.add(value.toString());
 
             dataMap["messageImages"] = urlsList;
+            dataMap['fileName'] = urlsList[0].toString();
 
             messagesRef.child(currentFullTime).update(dataMap).then((value) {
               if(Navigator.canPop(context)){
@@ -101,6 +102,4 @@ class CustomerSelectedImagesCubit extends Cubit<CustomerSelectedImagesStates>{
       });
     }
   }
-
-
 }

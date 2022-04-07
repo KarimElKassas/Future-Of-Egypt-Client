@@ -26,21 +26,7 @@ class LoginSuccessState extends LoginStates {
 
 }
 
-class LoginGetClerkDataSuccessState extends LoginStates {}
-
-class LoginGetUserSectionSuccessState extends LoginStates {}
-
-class LoginGetUserPersonIDSuccessState extends LoginStates {}
-
-class LoginGetUserDataSuccessState extends LoginStates {}
-
-class LoginGetSectionNameSuccessState extends LoginStates {}
-
-class LoginGetUserFormsSuccessState extends LoginStates {}
-
-class LoginLogSuccessState extends LoginStates {}
-
-class LoginLogErrorState extends LoginStates {}
+class LoginGetClientDataSuccessState extends LoginStates {}
 
 class LoginNoUserState extends LoginStates {}
 
@@ -50,38 +36,10 @@ class LoginSharedPrefErrorState extends LoginStates {
   LoginSharedPrefErrorState(this.error);
 }
 
-class LoginGetClerkDataErrorState extends LoginStates {
+class LoginGetClientDataErrorState extends LoginStates {
   final String error;
 
-  LoginGetClerkDataErrorState(this.error);
-}
-
-class LoginGetUserSectionErrorState extends LoginStates {
-  final String error;
-
-  LoginGetUserSectionErrorState(this.error);
-}
-
-class LoginGetSectionNameErrorState extends LoginStates {
-  final String error;
-
-  LoginGetSectionNameErrorState(this.error);
-}
-
-class LoginGetUserFormsErrorState extends LoginStates {
-  final String error;
-
-  LoginGetUserFormsErrorState(this.error);
-}
-class LoginGetPersonIDErrorState extends LoginStates {
-  final String error;
-
-  LoginGetPersonIDErrorState(this.error);
-}
-class LoginGetUserDataErrorState extends LoginStates {
-  final String error;
-
-  LoginGetUserDataErrorState(this.error);
+  LoginGetClientDataErrorState(this.error);
 }
 
 class LoginErrorState extends LoginStates {

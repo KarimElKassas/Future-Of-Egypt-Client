@@ -6,7 +6,7 @@ import 'package:flutter_iconly/flutter_iconly.dart';
 import '../../Posts/screens/global_display_posts_screen.dart';
 import '../../questions/screens/customer_questions_screen.dart';
 import '../../settings/screens/customer_settings_screen.dart';
-import '../../support/screens/customer_support_screen.dart';
+import '../../chat/screens/display_chats_screen.dart';
 import 'customer_home_states.dart';
 
 class CustomerHomeCubit extends Cubit<CustomerHomeStates>{

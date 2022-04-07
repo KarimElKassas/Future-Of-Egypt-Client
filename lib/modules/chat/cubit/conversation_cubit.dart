@@ -46,9 +46,14 @@ class ConversationCubit extends Cubit<ConversationStates> {
   String imageUrl = "";
   String fileUrl = "";
   String downloadingFileName = "";
+  String downloadingRecordName = "";
+  String uploadingFileName = "";
+  String uploadingRecordName = "";
+  String uploadingImageName = "";
   String totalDuration = '0:00';
   String loadingTime = '0:00';
   String audioPath = "";
+  String audioPathStore = "";
   String pathToAudio = "";
   bool isImageOnly = false;
   bool isRecording = false;
@@ -84,7 +89,7 @@ class ConversationCubit extends Cubit<ConversationStates> {
     userDocNumber = prefs.getString("CustomerDocNumber")!;
     userCity = prefs.getString("CustomerCity")!;
     userRegion = prefs.getString("CustomerRegion")!;
-    userImageUrl = prefs.getString("CustomerImage")!;
+    userImageUrl = prefs.getString("CustomerImageUrl")!;
     userToken = prefs.getString("CustomerToken")!;
 
     documentStream = FirebaseFirestore.instance
@@ -293,6 +298,7 @@ class ConversationCubit extends Cubit<ConversationStates> {
     dataMap['SenderID'] = userID;
     dataMap['ReceiverID'] = receiverID;
     dataMap['type'] = type;
+    dataMap['Message'] = "";
     dataMap["isSeen"] = isSeen;
     dataMap["messageTime"] = currentTime;
     dataMap["messageFullTime"] = currentFullTime;
@@ -300,61 +306,59 @@ class ConversationCubit extends Cubit<ConversationStates> {
     dataMap["hasImages"] = false;
     dataMap["fileName"] = file.files.first.name;
 
-    File docFile = File(file.files.first.path!);
+    messagesRef.child(currentFullTime).set(dataMap).then((value) async {
+      File docFile = File(file.files.first.path!);
+      var uploadTask = storageRef.putFile(docFile);
 
-    var uploadTask = storageRef.putFile(docFile);
-    await uploadTask.then((p0) {
-      p0.ref.getDownloadURL().then((value) {
-        dataMap["Message"] = value.toString();
-
-        messagesRef.child(currentFullTime).set(dataMap).then((realtimeDbValue) async {
-          database
-              .reference()
-              .child("Users")
-              .child(userID)
-              .child("UserLastMessage")
-              .set(file.files.first.name)
-              .then((value) {
-            database
-                .reference()
-                .child("Users")
-                .child(userID)
-                .child("UserLastMessageTime")
-                .set(currentTime)
-                .then((value) {
-              database
-                  .reference()
-                  .child("Users")
-                  .child(userID)
-                  .child("UserState")
-                  .set("متصل الان")
-                  .then((value) {
-                emit(ConversationSendMessageState());
-              });
-            });
-          });
+      await uploadTask.then((p0) {
+        p0.ref.getDownloadURL().then((value) {
+          dataMap["Message"] = value.toString();
+          messagesRef.child(currentFullTime).update(dataMap);
         }).catchError((error) {
           emit(ConversationSendMessageErrorState(error.toString()));
         });
       }).catchError((error) {
         emit(ConversationSendMessageErrorState(error.toString()));
       });
-    }).catchError((error) {
-      emit(ConversationSendMessageErrorState(error.toString()));
+
+      database
+          .reference()
+          .child("Clients")
+          .child(userID)
+          .child("ClientLastMessage")
+          .set(file.files.first.name)
+          .then((value) {
+        database
+            .reference()
+            .child("Clients")
+            .child(userID)
+            .child("ClientLastMessageTime")
+            .set(currentTime)
+            .then((value) {
+          database
+              .reference()
+              .child("Clients")
+              .child(userID)
+              .child("ClientState")
+              .set("متصل الان")
+              .then((value) {
+            emit(ConversationSendMessageState());
+          });
+        });
+      });
     });
   }
 
-  Future<void> sendAudioMessage(String type, bool isSeen, File file) async {
+  Future<void> sendAudioMessage(String receiverID, String type, bool isSeen, File file) async {
     DateTime now = DateTime.now();
     String currentTime = DateFormat("hh:mm a").format(now);
     String currentFullTime = DateFormat("yyyy-MM-dd HH:mm:ss").format(now);
 
-    var str = file.path.toString();
-    var parts = str.split('we-');
-    String fileName = parts[1].trim();
+    String fileName = audioPathStore;
 
     FirebaseDatabase database = FirebaseDatabase.instance;
     var messagesRef = database.reference().child("Messages");
+
     var storageRef = FirebaseStorage.instance
         .ref("Messages")
         .child(userID)
@@ -365,54 +369,44 @@ class ConversationCubit extends Cubit<ConversationStates> {
     dataMap['SenderID'] = userID;
     dataMap['ReceiverID'] = receiverID;
     dataMap['type'] = type;
+    dataMap['Message'] = "";
     dataMap["isSeen"] = isSeen;
     dataMap["messageTime"] = currentTime;
     dataMap["messageFullTime"] = currentFullTime;
     dataMap["messageImages"] = "emptyList";
-    dataMap["fileName"] = fileName;
     dataMap["hasImages"] = false;
+    dataMap["fileName"] = fileName;
 
-    File audioFile = File(file.path.toString());
+    messagesRef.child(currentFullTime).set(dataMap).then((value)async {
+      emit(ConversationUploadingRecordState(fileName));
+      uploadingRecordName = fileName;
+      print("RECORD NAME UPLOADING : $uploadingRecordName \n");
 
-    var uploadTask = storageRef.putFile(audioFile);
-    await uploadTask.then((p0) {
-      p0.ref.getDownloadURL().then((value) {
-        dataMap["Message"] = value.toString();
+      File audioFile = File(file.path.toString());
 
-        messagesRef.child(currentFullTime).set(dataMap).then((realtimeDbValue) async {
-          database
-              .reference()
-              .child("Users")
-              .child(userID)
-              .child("UserLastMessage")
-              .set("رسالة صوتية")
-              .then((value) {
-            database
-                .reference()
-                .child("Users")
-                .child(userID)
-                .child("UserLastMessageTime")
-                .set(currentTime)
-                .then((value) {
-              database
-                  .reference()
-                  .child("Users")
-                  .child(userID)
-                  .child("UserState")
-                  .set("متصل الان")
-                  .then((value) {
-                emit(ConversationSendMessageState());
-              });
-            });
+      var uploadTask = storageRef.putFile(audioFile);
+      uploadTask.then((p0) {
+        p0.ref.getDownloadURL().then((value) {
+          dataMap["Message"] = value.toString();
+
+          messagesRef
+              .child(currentFullTime)
+              .update(dataMap)
+              .then((realtimeDbValue) async {
+            uploadingRecordName = "";
+            emit(ConversationSendMessageState());
+          }).catchError((error) {
+            uploadingRecordName = "";
+            emit(ConversationSendMessageErrorState(error.toString()));
           });
         }).catchError((error) {
+          uploadingRecordName = "";
           emit(ConversationSendMessageErrorState(error.toString()));
         });
       }).catchError((error) {
+        uploadingRecordName = "";
         emit(ConversationSendMessageErrorState(error.toString()));
       });
-    }).catchError((error) {
-      emit(ConversationSendMessageErrorState(error.toString()));
     });
   }
 
@@ -668,8 +662,7 @@ class ConversationCubit extends Cubit<ConversationStates> {
         .set(userID);
   }
 
-  Future<void> downloadDocumentFile(
-      String fileName, String senderID, String receiverID) async {
+  Future<void> downloadDocumentFile(String fileName) async {
     emit(ConversationLoadingDownloadFileState(fileName));
     downloadingFileName = fileName;
 
@@ -679,18 +672,25 @@ class ConversationCubit extends Cubit<ConversationStates> {
       var path = await ExternalPath.getExternalStoragePublicDirectory(
           ExternalPath.DIRECTORY_DOWNLOADS);
 
-      File downloadToFile = File('$path/Future Of Egypt Media/Documents/$fileName');
+      File downloadToFile = File('$path/Future Of Egypt Media Client/Documents/$fileName');
 
-      try {
+      //try {
         await FirebaseStorage.instance
-            .ref('Messages/$senderID/$receiverID/$fileName')
-            .writeToFile(downloadToFile);
-        downloadingFileName = "";
-        emit(ConversationDownloadFileSuccessState());
-      } on FirebaseException catch (e) {
-        downloadingFileName = "";
-        emit(ConversationDownloadFileErrorState(e.message.toString()));
-      }
+            .ref('Messages')
+            .child(userID)
+            .child("Future Of Egypt")
+            .child(fileName)
+            .writeToFile(downloadToFile).then((p0){
+          downloadingFileName = "";
+          emit(ConversationDownloadFileSuccessState());
+        }).catchError((error){
+          downloadingFileName = "";
+           emit(ConversationDownloadFileErrorState(error.toString()));
+        });
+     // } on FirebaseException catch (e) {
+       // downloadingFileName = "";
+       // emit(ConversationDownloadFileErrorState(e.message.toString()));
+     // }
     } else {
       showToast(
           message: "يجب الموافقة على الاذن اولاً",
@@ -701,27 +701,25 @@ class ConversationCubit extends Cubit<ConversationStates> {
       emit(ConversationPermissionDeniedState());
     }
   }
-
-  Future<void> downloadAudioFile(
-      String fileName, String senderID, String receiverID, int index) async {
+  Future<void> downloadAudioFile(String fileName, int index) async {
     emit(ConversationLoadingDownloadFileState(fileName));
-    downloadingFileName = fileName;
+    downloadingRecordName = fileName;
 
     var status = await Permission.storage.request();
     if (status == PermissionStatus.granted) {
 
-      File downloadToFile = File('/storage/emulated/0/Download/Future Of Egypt Media/Records/$userName/we-$fileName');
+      File downloadToFile = File('/storage/emulated/0/Download/Future Of Egypt Media Client/Records/$fileName');
 
       try {
         await FirebaseStorage.instance
-            .ref('Messages/$senderID/$receiverID/$fileName')
+            .ref('Messages/$userID/$receiverID/$fileName')
             .writeToFile(downloadToFile);
-        downloadingFileName = "";
+        downloadingRecordName = "";
         emit(ConversationDownloadFileSuccessState());
 
         chatMicrophoneOnTapAction(index, fileName);
       } on FirebaseException catch (e) {
-        downloadingFileName = "";
+        downloadingRecordName = "";
         emit(ConversationDownloadFileErrorState(e.message.toString()));
       }
     } else {
@@ -730,13 +728,11 @@ class ConversationCubit extends Cubit<ConversationStates> {
           length: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 3);
-      downloadingFileName = "";
+      downloadingRecordName = "";
       emit(ConversationPermissionDeniedState());
     }
   }
-
-  Future<void> downloadImageFile(
-      String fileName, String senderID, String receiverID) async {
+  Future<void> downloadImageFile(String fileName) async {
     emit(ConversationLoadingDownloadFileState(fileName));
     downloadingFileName = fileName;
 
@@ -746,10 +742,10 @@ class ConversationCubit extends Cubit<ConversationStates> {
           ExternalPath.DIRECTORY_DOWNLOADS);
 
       File downloadToFile =
-          File('$path/Future Of Egypt Media/Images/$fileName');
+          File('$path/Future Of Egypt Media Client/Images/$fileName');
       try {
         await FirebaseStorage.instance
-            .ref('Messages/$senderID/$receiverID/$fileName')
+            .ref('Messages/$userID/$receiverID/$fileName')
             .writeToFile(downloadToFile);
         downloadingFileName = "";
         emit(ConversationDownloadFileSuccessState());
@@ -770,20 +766,25 @@ class ConversationCubit extends Cubit<ConversationStates> {
 
   bool checkForDocumentFile(String fileName) {
     bool isFileExist = File(
-            "/storage/emulated/0/Download/Future Of Egypt Media/Documents/$userName/$fileName")
+        "/storage/emulated/0/Download/Future Of Egypt Media Client/Documents/$fileName")
         .existsSync();
     return isFileExist;
   }
-
   bool checkForAudioFile(String fileName) {
-    bool isFileExist = File('/storage/emulated/0/Download/Future Of Egypt Media/Records/$userName/we-$fileName').existsSync();
+    bool isFileExist = File(
+        "/storage/emulated/0/Download/Future Of Egypt Media Client/Records/$fileName")
+        .existsSync();
     return isFileExist;
   }
-
   bool checkForImageFile(String fileName) {
     bool isFileExist = File(
-            "/storage/emulated/0/Download/Future Of Egypt Media/Images/$userName/$fileName")
+        "/storage/emulated/0/Download/Future Of Egypt Media Client/Images/$fileName")
         .existsSync();
+
+    if(!isFileExist){
+      downloadImageFile(fileName);
+    }
+
     return isFileExist;
   }
 
@@ -794,7 +795,7 @@ class ConversationCubit extends Cubit<ConversationStates> {
       var externalDoc = await ExternalPath.getExternalStoragePublicDirectory(
           ExternalPath.DIRECTORY_DOWNLOADS);
       final Directory recordingsDirectory =
-          Directory('$externalDoc/Future Of Egypt Media/Documents/');
+      Directory('$externalDoc/Future Of Egypt Media Client/Documents/');
 
       if (await recordingsDirectory.exists()) {
         //if folder already exists return path
@@ -810,7 +811,6 @@ class ConversationCubit extends Cubit<ConversationStates> {
       emit(ConversationPermissionDeniedState());
     }
   }
-
   Future<void> createUserRecordingsDirectory() async {
     var status = await Permission.storage.request();
 
@@ -818,7 +818,7 @@ class ConversationCubit extends Cubit<ConversationStates> {
       var externalDoc = await ExternalPath.getExternalStoragePublicDirectory(
           ExternalPath.DIRECTORY_DOWNLOADS);
       final Directory recordingsDirectory =
-          Directory('$externalDoc/Future Of Egypt Media/Records/$userName/');
+      Directory('$externalDoc/Future Of Egypt Media Client/Records/');
 
       if (await recordingsDirectory.exists()) {
         //if folder already exists return path
@@ -834,7 +834,6 @@ class ConversationCubit extends Cubit<ConversationStates> {
       emit(ConversationPermissionDeniedState());
     }
   }
-
   Future<void> createUserImagesDirectory() async {
     var status = await Permission.storage.request();
 
@@ -842,7 +841,7 @@ class ConversationCubit extends Cubit<ConversationStates> {
       var externalDoc = await ExternalPath.getExternalStoragePublicDirectory(
           ExternalPath.DIRECTORY_DOWNLOADS);
       final Directory imagesDirectory =
-          Directory('$externalDoc/Future Of Egypt Media/Images/');
+      Directory('$externalDoc/Future Of Egypt Media Client/Images/');
 
       if (await imagesDirectory.exists()) {
         //if folder already exists return path
@@ -864,11 +863,13 @@ class ConversationCubit extends Cubit<ConversationStates> {
     if (status == PermissionStatus.granted) {
       audioRecorder = Record();
       String currentFullTime =
-          DateFormat("yyyy-MM-dd-HH-mm-ss").format(DateTime.now());
+      DateFormat("yyyy-MM-dd-HH-mm-ss").format(DateTime.now());
       String extension = ".m4a";
       await createUserRecordingsDirectory();
       audioPath =
-          "/storage/emulated/0/Download/Future Of Egypt Media/Records/$userName/we-${currentFullTime.trim().toString()}-audio$extension";
+      "/storage/emulated/0/Download/Future Of Egypt Media Client/Records/${currentFullTime.trim().toString()}-audio$extension";
+      audioPathStore =
+      "${currentFullTime.trim().toString()}-audio$extension";
       await audioRecorder.start(
           path: audioPath,
           bitRate: 16000,
@@ -889,7 +890,41 @@ class ConversationCubit extends Cubit<ConversationStates> {
       emit(ConversationPermissionDeniedState());
     }
   }
-
+  Future stopRecord() async {
+    timer?.cancel();
+    ampTimer?.cancel();
+    isRecording = false;
+    startedRecordValue.value = false;
+    await audioRecorder.stop();
+    await sendAudioMessage(receiverID,"Audio", false, File(audioPath));
+    audioPath = "";
+    audioPathStore = "";
+    emit(ConversationStopRecordSuccessState());
+  }
+  Future cancelRecord() async {
+    timer?.cancel();
+    ampTimer?.cancel();
+    isRecording = false;
+    startedRecordValue.value = false;
+    await audioRecorder.stop();
+    File(audioPath).deleteSync();
+    audioPath = "";
+    audioPathStore = "";
+    emit(ConversationCancelRecordSuccessState());
+  }
+  Future toggleRecording() async {
+    if (!isRecording) {
+      await recordAudio();
+    } else {
+      await stopRecord();
+    }
+    emit(ConversationToggleRecordSuccessState());
+  }
+  void changeRecordingState() async {
+    isRecording = false;
+    startedRecordValue.value = false;
+    emit(ConversationChangeRecordingState());
+  }
   void startTimer() {
     timer?.cancel();
     ampTimer?.cancel();
@@ -901,157 +936,85 @@ class ConversationCubit extends Cubit<ConversationStates> {
 
     ampTimer =
         Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
-      amplitude = await audioRecorder.getAmplitude();
-      emit(ConversationAmpTimerSuccessState());
-    });
+          amplitude = await audioRecorder.getAmplitude();
+          emit(ConversationAmpTimerSuccessState());
+        });
   }
-
-  Future stopRecord() async {
-    timer?.cancel();
-    ampTimer?.cancel();
-    isRecording = false;
-    startedRecordValue.value = false;
-    await audioRecorder.stop();
-    await sendAudioMessage("Audio", false, File(audioPath));
-    audioPath = "";
-    emit(ConversationStopRecordSuccessState());
-  }
-  void changeRecordingState() async {
-    isRecording = false;
-    startedRecordValue.value = false;
-    emit(ConversationChangeRecordingState());
-  }
-
-  Future cancelRecord() async {
-    timer?.cancel();
-    ampTimer?.cancel();
-    isRecording = false;
-    startedRecordValue.value = false;
-    await audioRecorder.stop();
-    File(audioPath).deleteSync();
-    audioPath = "";
-    emit(ConversationCancelRecordSuccessState());
-  }
-
-  Future toggleRecording() async {
-    if (!isRecording) {
-      await recordAudio();
-    } else {
-      await stopRecord();
-    }
-    emit(ConversationToggleRecordSuccessState());
-  }
-
   void initRecorder() async {
     isRecording = false;
     emit(ConversationInitializeRecordSuccessState());
   }
-
-  Future<bool> saveAudioFile(String fileName, String senderID, int index) async {
-    Directory? directory;
-    try {
-      if (Platform.isAndroid) {
-        var status = await Permission.storage.request();
-        if (status == PermissionStatus.granted) {
-          directory = await getExternalStorageDirectory();
-          String newPath = "";
-          print(directory);
-          List<String> paths = directory!.path.split("/");
-          for (int x = 1; x < paths.length; x++) {
-            String folder = paths[x];
-            if (folder != "Android") {
-              newPath += "/" + folder;
-            } else {
-              break;
-            }
-          }
-          newPath = newPath + "/Future Of Egypt";
-          directory = Directory(newPath);
-          appDirectory = directory;
-        } else {
-          return false;
-        }
-      }
-      if (!await directory!.exists()) {
-        await directory.create(recursive: true);
-        downloadAudioFile(fileName, senderID, "Future Of Egypt", index);
-      }
-      if (await directory.exists()) {
-        downloadAudioFile(fileName, senderID, "Future Of Egypt", index);
-      }
-    } catch (e) {
-      print(e);
-    }
-    return false;
-  }
   void chatMicrophoneOnTapAction(int index, String fileName) async {
     try {
       justAudioPlayer.positionStream.listen((event) {
-
         currAudioPlayingTime = event.inMicroseconds.ceilToDouble();
-        loadingTime = '${event.inMinutes} : ${event.inSeconds > 59 ? event.inSeconds % 60 : event.inSeconds}';
+        loadingTime =
+        '${event.inMinutes} : ${event.inSeconds > 59 ? event.inSeconds % 60 : event.inSeconds}';
         emit(ConversationChangeRecordPositionState());
       });
 
       justAudioPlayer.playerStateStream.listen((event) {
         if (event.processingState == j.ProcessingState.completed) {
           justAudioPlayer.stop();
-              loadingTime = '0:00';
-              iconData = Icons.play_arrow_rounded;
+          loadingTime = '0:00';
+          iconData = Icons.play_arrow_rounded;
         }
       });
 
       if (lastAudioPlayingIndex != index) {
-        await justAudioPlayer
-            .setFilePath('/storage/emulated/0/Download/Future Of Egypt Media/Records/$userName/we-$fileName');
+        await justAudioPlayer.setFilePath(
+            '/storage/emulated/0/Download/Future Of Egypt Media Client/Records/$fileName');
 
-            lastAudioPlayingIndex = index;
-            totalDuration =
-            '${justAudioPlayer.duration!.inMinutes} : ${justAudioPlayer.duration!.inSeconds > 59 ? justAudioPlayer.duration!.inSeconds % 60 : justAudioPlayer.duration!.inSeconds}';
-            iconData = Icons.pause_rounded;
-            audioPlayingSpeed = 1.0;
-            justAudioPlayer.setSpeed(audioPlayingSpeed);
+        lastAudioPlayingIndex = index;
+        totalDuration =
+        '${justAudioPlayer.duration!.inMinutes} : ${justAudioPlayer.duration!.inSeconds > 59 ? justAudioPlayer.duration!.inSeconds % 60 : justAudioPlayer.duration!.inSeconds}';
+        iconData = Icons.pause_rounded;
+        audioPlayingSpeed = 1.0;
+        justAudioPlayer.setSpeed(audioPlayingSpeed);
 
         await justAudioPlayer.play();
       } else {
         print(justAudioPlayer.processingState);
         if (justAudioPlayer.processingState == j.ProcessingState.idle) {
-          await justAudioPlayer
-              .setFilePath('/storage/emulated/0/Download/Future Of Egypt Media/Records/$userName/we-$fileName');
+          await justAudioPlayer.setFilePath(
+              '/storage/emulated/0/Download/Future Of Egypt Media Client/Records/$fileName');
 
-              lastAudioPlayingIndex = index;
-              totalDuration =
-              '${justAudioPlayer.duration!.inMinutes} : ${justAudioPlayer.duration!.inSeconds}';
-              iconData = Icons.pause_rounded;
+          lastAudioPlayingIndex = index;
+          totalDuration =
+          '${justAudioPlayer.duration!.inMinutes} : ${justAudioPlayer.duration!.inSeconds}';
+          iconData = Icons.pause_rounded;
 
           await justAudioPlayer.play();
         } else if (justAudioPlayer.playing) {
-              iconData = Icons.play_arrow_rounded;
+          iconData = Icons.play_arrow_rounded;
 
           await justAudioPlayer.pause();
         } else if (justAudioPlayer.processingState == j.ProcessingState.ready) {
-              iconData = Icons.pause;
+          iconData = Icons.pause;
 
           await justAudioPlayer.play();
         } else if (justAudioPlayer.processingState ==
             j.ProcessingState.completed) {}
       }
       emit(ConversationPlayRecordSuccessState());
-
     } catch (e) {
       print('Audio Playing Error');
-      showToast(message : 'May be Audio File Not Found', length: Toast.LENGTH_SHORT, gravity: ToastGravity.BOTTOM, timeInSecForIosWeb: 3);
+      showToast(
+          message: 'May be Audio File Not Found',
+          length: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3);
     }
   }
   void chatMicrophoneOnLongPressAction() async {
     if (justAudioPlayer.playing) {
       await justAudioPlayer.stop();
 
-          print('Audio Play Completed');
-          justAudioPlayer.stop();
-              loadingTime = '0:00';
-              iconData = Icons.play_arrow_rounded;
-              lastAudioPlayingIndex = -1;
+      print('Audio Play Completed');
+      justAudioPlayer.stop();
+      loadingTime = '0:00';
+      iconData = Icons.play_arrow_rounded;
+      lastAudioPlayingIndex = -1;
     }
     emit(ConversationStopRecordSuccessState());
   }

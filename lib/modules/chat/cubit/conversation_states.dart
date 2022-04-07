@@ -10,6 +10,12 @@ class ConversationUploadImagesState extends ConversationStates{}
 
 class ConversationSendMessageState extends ConversationStates{}
 
+class ConversationUploadingRecordState extends ConversationStates{
+  final String recordName;
+
+  ConversationUploadingRecordState(this.recordName);
+}
+
 class ConversationPermissionDeniedState extends ConversationStates{}
 
 class ConversationSelectImagesState extends ConversationStates{}

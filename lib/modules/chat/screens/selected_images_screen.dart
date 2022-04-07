@@ -3,6 +3,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:buildcondition/buildcondition.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -30,6 +31,18 @@ class _CustomerSelectedImagesScreenState extends State<CustomerSelectedImagesScr
           var cubit = CustomerSelectedImagesCubit.get(context);
 
           return Scaffold(
+            appBar: AppBar(
+              systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: Colors.black,
+                statusBarIconBrightness: Brightness.light,
+                // For Android (dark icons)
+                statusBarBrightness:
+                Brightness.dark, // For iOS (dark icons)
+              ),
+              backgroundColor: Colors.black,
+              elevation: 0.0,
+              toolbarHeight: 0,
+            ),
             backgroundColor: Colors.black,
             floatingActionButton: BuildCondition(
               condition: state is CustomerSelectedImagesUploadingState,
@@ -55,35 +68,53 @@ class _CustomerSelectedImagesScreenState extends State<CustomerSelectedImagesScr
             body: Center(
                 child: CarouselSlider.builder(
                   itemCount: widget.chatImages!.length,
-                  itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) => ClipRRect(
-                    child: FadeInImage(
-                        height: 250,
-                        width: double.infinity,
-                        fit: BoxFit.fill,
-                        image: FileImage(File(widget.chatImages![itemIndex]!.path)),
-                        placeholder:
-                        const AssetImage("assets/images/placeholder.jpg"),
-                        imageErrorBuilder: (context, error, stackTrace) {
-                          return Image.asset('assets/images/error.png',
-                              width: double.infinity,
-                              height: 250,
-                              fit: BoxFit.fill);
-                        },
+                  itemBuilder: (BuildContext context, int itemIndex, int pageViewIndex) =>
+                   InteractiveViewer(
+                        child: Scaffold(
+                          backgroundColor: Colors.black,
+                          appBar: AppBar(
+                            systemOverlayStyle: const SystemUiOverlayStyle(
+                              statusBarColor: Colors.black,
+                              statusBarIconBrightness: Brightness.light,
+                              // For Android (dark icons)
+                              statusBarBrightness:
+                              Brightness.dark, // For iOS (dark icons)
+                            ),
+                            backgroundColor: Colors.black,
+                            elevation: 0.0,
+                            toolbarHeight: 0,
+                          ),
+                          body: Center(
+                            child: FadeInImage(
+                              fit: BoxFit.fill,
+                              image: FileImage(File(widget.chatImages![itemIndex]!.path)),
+                              placeholder:
+                              const AssetImage("assets/images/placeholder.jpg"),
+                              imageErrorBuilder: (context, error, stackTrace) {
+                                return Image.asset('assets/images/error.png',
+                                    fit: BoxFit.fill);
+                              },
+                            ),
+                          ),
+                        ),
+                        maxScale: 3.5,
+                        panEnabled: true,
+                        scaleEnabled: true,
                       ),
-                  ),
-                  options: CarouselOptions(
-                    height: 250.0,
-                    initialPage: 0,
-                    viewportFraction: 1.0,
-                    enableInfiniteScroll: false,
-                    reverse: false,
-                    autoPlay: false,
-                    scrollPhysics: const BouncingScrollPhysics(),
-                    autoPlayInterval: const Duration(seconds: 5),
-                    autoPlayAnimationDuration: const Duration(seconds: 1),
-                    autoPlayCurve: Curves.fastOutSlowIn,
-                    scrollDirection: Axis.horizontal,
-                  ),
+                    options: CarouselOptions(
+                        height: MediaQuery.of(context).size.height *0.50,
+                        initialPage: 0,
+                        viewportFraction: 1.0,
+                        enableInfiniteScroll: false,
+                        reverse: false,
+                        autoPlay: false,
+                        scrollPhysics: const BouncingScrollPhysics(),
+                        autoPlayInterval: const Duration(seconds: 5),
+                        autoPlayAnimationDuration: const Duration(seconds: 1),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        scrollDirection: Axis.horizontal,
+                        enlargeStrategy: CenterPageEnlargeStrategy.scale
+                    ),
                 ),
             ),
           );

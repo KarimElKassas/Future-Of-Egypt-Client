@@ -48,8 +48,9 @@ dependencies:
   firebase_messaging: ^11.2.6
   firebase_analytics: ^9.1.0
   firebase_auth: ^3.3.5
-  video_player: ^2.2.7
   youtube_player_flutter: ^8.0.0
+  better_player: ^0.0.81
+  transition_plus: 0.0.12
   flutter_speed_dial: ^5.0.0+1
   animate_do: ^2.0.0
   flutter_iconly: ^1.0.2

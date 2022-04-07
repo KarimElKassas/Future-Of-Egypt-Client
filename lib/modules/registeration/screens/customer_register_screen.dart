@@ -64,6 +64,18 @@ class CustomerRegisterScreen extends StatelessWidget {
             gravity: ToastGravity.BOTTOM,
             timeInSecForIosWeb: 3,
           );
+          showToast(
+            message: state.error,
+            length: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 3,
+          );
+          showToast(
+            message: state.error,
+            length: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 3,
+          );
         } else if (state is CustomerRegisterUserExistState) {
           showToast(
             message: "هذا الرقم القومى مسجل من قبل",
@@ -600,14 +612,18 @@ class CustomerRegisterScreen extends StatelessWidget {
                                       return;
                                     }
                                     if (formKey.currentState!.validate()) {
-                                      cubit.uploadUserFirebase(
-                                          nameController.text.toString(),
+
+                                      cubit.insertPersonName(nameController.text.toString(),
                                           phoneController.text.toString(),
                                           passwordController.text.toString(),
                                           cubit.idOptionItemSelected.title,
                                           nationalIDController.text.toString(),
                                           cubit.selectedCityName,
-                                          cubit.selectedRegionName);
+                                          cubit.selectedRegionName,
+                                          0,
+                                          1,
+                                          nationalIDController.text.toString(),
+                                          cubit.idOptionItemSelected.id);
                                     }
                                   }
                                 },

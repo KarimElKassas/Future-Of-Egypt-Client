@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:future_of_egypt_client/modules/Login/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../shared/components.dart';
@@ -14,7 +16,7 @@ class CustomerSettingsCubit extends Cubit<CustomerSettingsStates> {
 
   double downloadSpeed = 0.0;
 
-  void logOutUser() async {
+  void logOutUser(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     await prefs.remove("CustomerID");
@@ -24,13 +26,14 @@ class CustomerSettingsCubit extends Cubit<CustomerSettingsStates> {
     await prefs.remove("CustomerPhone");
     await prefs.remove("CustomerPassword");
     await prefs.remove("CustomerToken");
-    await prefs.remove("CustomerImage");
+    await prefs.remove("CustomerImageUrl");
     await prefs.remove("CustomerDocType");
     await prefs.remove("CustomerDocNumber");
-    await prefs.remove("UserType");
 
     customerLogged = false;
     customerState.value = 0;
+
+    navigateAndFinish(context, LoginScreen());
 
     showToast(message: "تم تسجيل الخروج بنجاح",
         length: Toast.LENGTH_SHORT,

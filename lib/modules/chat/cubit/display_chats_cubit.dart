@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:transition_plus/transition_plus.dart';
 
 import '../../../models/display_chat_model.dart';
 import '../../../models/user_model.dart';
@@ -20,36 +21,25 @@ class CustomerDisplayChatsCubit extends Cubit<CustomerDisplayChatsStates> {
 
   List<UserModel> userList = [];
   List<DisplayChatModel> chatList = [];
+  String? userImage;
 
-
-  void getUserData() async {
+  Future<void> getMyData()async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    if (prefs.getString("UserType") == null) {
-      customerLogged = false;
-      emit(CustomerDisplayChatsGetUserTypeState());
-    } else {
-      if (prefs.getString("UserType") == "Customer") {
-
-        customerLogged = true;
-        emit(CustomerDisplayChatsGetUserTypeState());
-      }else{
-        customerLogged = false;
-        emit(CustomerDisplayChatsGetUserTypeState());
-      }
-    }
+    userImage = prefs.getString("CustomerImageUrl")!;
+    emit(CustomerDisplayChatsGetMyDataState());
   }
-
   void goToConversation(BuildContext context, route) {
-    navigateTo(context, route);
+    Navigator.push(context, ScaleTransition1(page: route, startDuration: const Duration(milliseconds: 800),closeDuration: const Duration(milliseconds: 500), type: ScaleTrasitionTypes.bottomRight));
+    //navigateTo(context, route);
   }
 
   Future<void> getChats() async {
+    await getMyData();
     emit(CustomerDisplayChatsLoadingChatsState());
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
+      print("IDDDDDD : ${prefs.getString("CustomerID")}\n");
 
-    if(customerLogged){
       await FirebaseDatabase.instance
           .reference()
           .child('ChatList')
@@ -83,11 +73,10 @@ class CustomerDisplayChatsCubit extends Cubit<CustomerDisplayChatsStates> {
               userList.add(userModel!);
             }
           }
+          print("Chat List Length : ${chatList.length}\n");
+          print("Chat List Length : ${userList.length}\n");
+          emit(CustomerDisplayChatsGetChatsState());
         });
-        print("Chat List Length : ${chatList.length}\n");
-        print("Chat List Length : ${userList.length}\n");
-        emit(CustomerDisplayChatsGetChatsState());
       });
-    }
   }
 }

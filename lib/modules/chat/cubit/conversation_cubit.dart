@@ -575,6 +575,8 @@ class ConversationCubit extends Cubit<ConversationStates> {
         .child("ReceiverID")
         .set(userID);
   }
+
+
   List<GalleryModel> galleryItems = <GalleryModel>[];
 
   /*buildItemsList(List<String> items) {

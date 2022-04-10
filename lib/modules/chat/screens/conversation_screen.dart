@@ -8,6 +8,7 @@ import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:future_of_egypt_client/modules/chat/screens/chat_opened_image_screen.dart';
+import 'package:future_of_egypt_client/modules/chat/screens/conversation_details_screen.dart';
 import 'package:galleryimage/gallery_Item_model.dart';
 import 'package:open_file/open_file.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -141,7 +142,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             //flex: 3,
                             child: InkWell(
                               onTap: (){
-                                //cubit.navigateToDetails(context, widget.groupID, widget.groupName, widget.groupImage, widget.membersList, widget.adminsList);
+                                navigateTo(context, ConversationDetailsScreen(messagesList: cubit.chatListReversed));
+
                               },
                               splashColor: Colors.transparent,
                               child: Text(

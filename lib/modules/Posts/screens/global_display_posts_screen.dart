@@ -79,6 +79,7 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
             textDirection: ui.TextDirection.rtl,
             child: Scaffold(
               appBar: AppBar(
+
                 systemOverlayStyle: SystemUiOverlayStyle(
                   statusBarColor: Colors.teal[700],
                   statusBarIconBrightness: Brightness.light,
@@ -114,7 +115,7 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
                     shrinkWrap: true,
                     addAutomaticKeepAlives: true,
                     scrollDirection: Axis.vertical,
-                    physics: const BouncingScrollPhysics(),
+                    //physics: const BouncingScrollPhysics(),
                     itemBuilder: (context, index) => cardBuilder(context, cubit,
                         state, cubit.postsListReversed[index], index),
                     separatorBuilder: (context, index) =>
@@ -239,8 +240,8 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
 
   Widget postBody(BuildContext context, GlobalDisplayPostsCubit cubit,
       GlobalDisplayPostsStates state, PostsModel postsModel, int index) {
-    /*cubit.initializeVideoWithoutPlay(
-        cubit.postsListReversed[index].PostVideoID.toString());*/
+    cubit.initializeVideoWithoutPlay(
+        cubit.postsListReversed[index].PostVideoID.toString());
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
@@ -309,17 +310,15 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
                 ? false
                 : true,
             child:
-
-
-            AspectRatio(
+            /*AspectRatio(
               aspectRatio: 16 / 9,
               child: BetterPlayerListVideoPlayer(
                 BetterPlayerDataSource(BetterPlayerDataSourceType.network,
                     "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"),
                 key: Key(cubit.postsListReversed.hashCode.toString()),
                 playFraction: 0.8,
-              ),
-            /*SizedBox(
+              ),*/
+            SizedBox(
               child: YoutubePlayer(
                 bottomActions: [
                   CurrentPosition(),
@@ -334,8 +333,7 @@ class _GlobalDisplayPostsScreenState extends State<GlobalDisplayPostsScreen>
               ),
               width: MediaQuery.of(context).size.width,
               height: 200,
-            ),*/
-          ),
+            ),
           ),
           const SizedBox(
             height: 8.0,

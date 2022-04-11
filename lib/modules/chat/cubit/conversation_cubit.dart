@@ -713,9 +713,16 @@ class ConversationCubit extends Cubit<ConversationStates> {
       File downloadToFile = File('/storage/emulated/0/Download/Future Of Egypt Media Client/Records/$fileName');
 
       try {
-        await FirebaseStorage.instance
+
+        FirebaseStorage.instance
             .ref('Messages/$userID/$receiverID/$fileName')
-            .writeToFile(downloadToFile);
+            .writeToFile(downloadToFile).snapshotEvents.listen((event) {
+
+              print("Total Bytes : ${event.totalBytes / 1024}\n");
+              print("Bytes Transferred : ${event.bytesTransferred / 1024}\n");
+
+        });
+
         downloadingRecordName = "";
         emit(ConversationDownloadFileSuccessState());
 
